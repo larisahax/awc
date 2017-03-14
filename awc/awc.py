@@ -303,28 +303,6 @@ class AWC():
     labels_ : array, shape = [n_samples,]
         Labels of each point
     
-    Examples
-    --------
-
-    >>> from sklearn.cluster import KMeans
-    >>> import numpy as np
-    >>> X = np.array([[1, 2], [1, 4], [1, 0],
-    ...               [4, 2], [4, 4], [4, 0]])
-    >>> kmeans = KMeans(n_clusters=2, random_state=0).fit(X)
-    >>> kmeans.labels_
-    array([0, 0, 0, 1, 1, 1], dtype=int32)
-
-    Notes
-    ------
-    The k-means problem is solved using Lloyd's algorithm.
-
-    The average complexity is given by O(k n T), were n is the number of
-    samples and T is the number of iteration.
-
-    The worst case complexity is given by O(n^(k+2/p)) with
-    n = n_samples, p = n_features. (D. Arthur and S. Vassilvitskii,
-    'How slow is the k-means method?' SoCG2006)
-
     """
     
     def __init__(self, n_neigh=-1, effective_dim=-1, n_outliers=0, discrete=False, speed=1.5):
