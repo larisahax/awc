@@ -116,28 +116,29 @@ def get_h_intervals(dist_matrix, n_0, discrete=False, speed=1.5):
 
 
 
-def init(X, n_neigh=-1, dist_matrix=None, dim=-1, discrete=False, speed=1.5):
+def init(X, dist_matrix, n_neigh=-1, dim=-1, discrete=False, speed=1.5):
     """initialization step for all variables"""
-    
+    if dist_matrix is None:
+        dist_matrix = distance_matrix(X)
+    n = np.size(dist_matrix, 0)
+    if X is None:
+        dim = 2
     if dim == -1:
         if np.size(X, 1) > 7:
             dim = 2
         else: 
             dim = np.size(X, 1)
     if n_neigh == -1:
-        n_neigh = max(6, min(2 * dim + 2, 0.1 * len(X)))
-        
+        n_neigh = max(6, min(2 * dim + 2, 0.1 * n))
         #if dim == -1:
         #    n_0 = 2 * np.size(X, 1) + 2
         #else:
         #    n_0 = 2 *s dim + 2
     L_T = get_lambda_table(dim, 10000)
-    if dist_matrix == None:
-        dist_matrix = distance_matrix(X)
     H, dist_ordered = get_h_intervals(dist_matrix, n_neigh, discrete, speed)
     v = dist_ordered[:, n_neigh-1].clip(min=H[0])
     weights = init_weights(dist_matrix, H, n_neigh, discrete) 
-    T = np.zeros((len(X), len(X)))
+    T = np.zeros((n, n))
     KL = KL_init()
     return L_T, dist_matrix, H, v, weights, T, KL
 
@@ -266,24 +267,24 @@ def clustering_from_weights(weights):
 class AWC():
     """Adaptive Weights Clustering
 
-    Read more in the :ref:`User Guide <awc>`.
-
     Parameters
     ----------
     
     n_neigh : int, optional, default: -1
         The number of closest neighbors to be connected on the initialization step.
-        If not specified, n_neigh = (2d+2).clip(max=0.1n, min=5)
+        If not specified, n_neigh = max(6, min(2 * effective_dim + 2, 0.1 * n_samples))
         
     effective_dim : int, optional, default: -1
-        Effective number of features of data X. If not specified, true dimension of the data, 
+        Effective dimension of data X. 
+        If not specified, effective_dim = true dimension of the data, 
         in case the true dimension is less than 7, otherwise 2.
     
     n_outliers : int, optional, default: 0
         Minimum number of points each cluster must contain.
+        Points from clusters with smaller size will be connected to the closest cluster.
     
     discrete : boolean, optional, default: False
-        Specifies if data X consists of discrete values.
+        Specifies if data X consists of only discrete values.
         
     speed : int, optional, default: 1.5
         Controls the number of iterations.
@@ -294,11 +295,12 @@ class AWC():
     dmatrix : array, shape = [n_samples, n_n_samples]
         Distance matrix.
         
-    clusters_ : list of lists, shape = [n_clusters,]
-        Cluster structure of data X. 
+    clusters_ : list of lists
+        Cluster structure of data X i.e. list of clusters, where each cluster 
+       is a list of points indexes in that cluster. 
     
     weights_ : numpy array, shape = [n_samples, n_samples]
-        Weights computed by awc.
+        Weight matrix computed by awc.
     
     labels_ : array, shape = [n_samples,]
         Labels of each point
@@ -313,27 +315,37 @@ class AWC():
         self.clusters_ = None
         self.speed = speed
     
-    def awc(self, X, l, dmatrix=None):
+    def awc(self, l, X=None, dmatrix=None):
         """Recover cluster structure of data X.
         
         Parameters
         ----------
-        X : array, shape (n_samples, n_features)
-            Input data.
-            
         l : int
             The lambda parameter.
         
+        X : array, shape (n_samples, n_features), optional, default: None 
+            Input data. 
+            awc works with distance matrix. 
+            User must specify X or dmatrix.
+            From X Euclidean distance matrix is computed and passed to awc.
+            No need to specify X, if dmatrix is specified. 
+        
         dmatrix : array, shape (n_samples, n_n_samples), optional, default: None
-            Distance matrix. If not specified, Euclidean distance matrix is computed. 
+            Distance matrix. If not specified, then X must be specified, from which 
+            Euclidean distance matrix is computed.
+            
         
         Returns
         -------
         weights_ : array, shape (n_samples, n_samples)
            Final weights from which the cluster structure can be extracted. 
         """
-        n = len(X)
-        L_T, self.dmatrix, H, v, self.weights_, T, KL = init(X, self.n_neigh, dmatrix, self.effective_dim, self.discrete, self.speed)
+        
+        if X is None and dmatrix is None:
+            raise ValueError("X and dmatrix can't be both None.")
+        
+        L_T, self.dmatrix, H, v, self.weights_, T, KL = init(X, dmatrix, self.n_neigh, self.effective_dim, self.discrete, self.speed)
+        n = np.size(self.dmatrix, 0)
         for k in range(1, len(H)):
             #print 'step k=', k, '/', len(H)-1
             cluster_step(l, self.weights_, v, n, k, L_T, T, KL, self.dmatrix, H)
@@ -347,7 +359,7 @@ class AWC():
         
         Returns
         -------
-        clusters_ : list, shape (n_clusters,)
+        clusters_ : list
            Cluster structure of the data, i.e. list of clusters, where each cluster 
            is a list of points indexes in that cluster.   
         """
@@ -372,19 +384,21 @@ class AWC():
         self.labels = Y
         return self.labels
     
-    def plot_sum_of_weights(self, X, lambda_interval, dist_matrix=None):
+    def plot_sum_of_weights(self, lambda_interval, X=None, dmatrix=None):
         """Plot the sum of computed weights for lambda parameters from the given interval.
         
         Parameters
         ----------
-        X : array, shape (n_samples, n_features)
-            Input data.
             
         lambda_interval : list
             Lambda parameters for which sum of weights will be computed.
+            
+        X : array, shape (n_samples, n_features), optional, default: None 
+            Input data. 
+            No need to specify X, if dmatrix is specified. 
         
         dmatrix : array, shape (n_samples, n_n_samples), optional, default: None
-            Distance matrix. If not specified, Euclidean distance matrix is computed. 
+            Distance matrix. If not specified, then Euclidean distance matrix is computed from X.
         
         Returns
         -------
@@ -393,7 +407,7 @@ class AWC():
         """
         weights_computed = []
         for l in lambda_interval:
-            weights = self.awc(X, l)
+            weights = self.awc(l, X, dmatrix)
             weights_computed.append(weights)
         
         sorting_order = np.argsort(lambda_interval)

@@ -24,9 +24,9 @@ def run_iris():
     AWC_object = AWC(speed=1.)
     # To tune parameter \lambda, plot sum of the weights for \lambda 's from some interval 
     #and take a value at the end of plateau or before huge jump.
-    AWC_object.plot_sum_of_weights(X, lambda_interval)
+    AWC_object.plot_sum_of_weights(lambda_interval, X)
     l = 0.6
-    AWC_object.awc(X, l)
+    AWC_object.awc(l, X)
     clusters = AWC_object.get_clusters()
     labels = AWC_object.get_labels()
     draw(X, labels, 'Iris')
