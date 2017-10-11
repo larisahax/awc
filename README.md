@@ -4,7 +4,7 @@ Description
 
 Python implementation of Adaptive Weights Clustering algorithm.
 
-AWC is a novel non-parametric clustering technique based on adaptive weights. Weights are recovered using an iterative procedure based on statistical test of "no gap". Method does not require specifying number of clusters. It applies equally well to clusters of convex structure and different density. The procedure is numerically feasible and applicable for large high dimensional datasets. The paper with detailed description of the algorithm will be available soon.
+AWC is a novel non-parametric clustering technique based on adaptive weights. Weights are recovered using an iterative procedure based on statistical test of "no gap". Method does not require specifying number of clusters. It applies equally well to clusters of convex structure and different density. The procedure is numerically feasible and applicable for large high dimensional datasets. The paper with detailed description of the algorithm is available on arXiv: [Adaptive Nonparametric Clustering](https://arxiv.org/abs/1709.09102v1).
 
 Installation
 -----------
