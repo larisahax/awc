@@ -17,7 +17,7 @@ Build the latest development version from source:
 
 Requirements
 -----
-
+python 2.7
 numpy  
 scipy  
 matplotlib
